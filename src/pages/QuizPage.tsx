@@ -151,54 +151,49 @@ const QuizPage: React.FC<QuizPageProps> = ({ navigate }) => {
   const autoAdvanceTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const loadQuestions = useCallback(async () => {
-    setLoading(true);
-    setError('');
-    try {
-      const { ipcRenderer } = require('electron');
-      
-      // 通过 IPC 读取题目
-      ipcRenderer.send('read-questions');
-      
-      ipcRenderer.once('read-questions-response', (_event: any, response: { success: boolean; data: Question[] }) => {
-        if (response.success) {
-          if (!response.data.length) {
-            setError('暂无题目，请先在「题库管理」中导入 Excel');
-            setList([]);
-          } else {
-            setList(response.data);
-            setIndex(0);
-            setSelected([]);
-            setAnswered({});
-          }
-        } else {
-          // 如果读取失败，使用默认题目
-          const defaultQuestions: Question[] = [
-            {
-              id: '1',
-              title: '安全生产管理的根本目的是（ ）。',
-              options: ['A. 消除隐患，杜绝事故', 'B. 避免造成人身伤亡，财产损失', 'C. 提高企业安全生产管理水平', 'D. 保证生产经营活动中的人身安全，财产安全，促进经济发展'],
-              answer: 'D'
-            },
-            {
-              id: '2',
-              title: '安全生产管理的方针是（ ）。',
-              options: ['A. 安全第一，预防为主，综合治理', 'B. 安全第一，预防为主', 'C. 安全第一，综合治理', 'D. 预防为主，综合治理'],
-              answer: 'A'
-            }
-          ];
-          setList(defaultQuestions);
-          setIndex(0);
-          setSelected([]);
-          setAnswered({});
+  setLoading(true);
+  setError('');
+  try {
+    // 使用暴露的 API
+    const response = await (window as any).myAPI.readQuestions();
+    if (response.success) {
+      if (!response.data.length) {
+        setError('暂无题目，请先在「题库管理」中导入 Excel');
+        setList([]);
+      } else {
+        setList(response.data);
+        setIndex(0);
+        setSelected([]);
+        setAnswered({});
+      }
+    } else {
+      // 如果读取失败，使用默认题目
+      const defaultQuestions: Question[] = [
+        {
+          id: '1',
+          title: '安全生产管理的根本目的是（ ）。',
+          options: ['A. 消除隐患，杜绝事故', 'B. 避免造成人身伤亡，财产损失', 'C. 提高企业安全生产管理水平', 'D. 保证生产经营活动中的人身安全，财产安全，促进经济发展'],
+          answer: 'D'
+        },
+        {
+          id: '2',
+          title: '安全生产管理的方针是（ ）。',
+          options: ['A. 安全第一，预防为主，综合治理', 'B. 安全第一，预防为主', 'C. 安全第一，综合治理', 'D. 预防为主，综合治理'],
+          answer: 'A'
         }
-        setLoading(false);
-      });
-    } catch (e) {
-      setError(e instanceof Error ? e.message : '加载失败');
-      setList([]);
-      setLoading(false);
+      ];
+      setList(defaultQuestions);
+      setIndex(0);
+      setSelected([]);
+      setAnswered({});
     }
-  }, []);
+  } catch (e) {
+    setError(e instanceof Error ? e.message : '加载失败');
+    setList([]);
+  } finally {
+    setLoading(false);
+  }
+}, []);
 
   useEffect(() => {
     loadQuestions();

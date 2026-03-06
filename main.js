@@ -1,4 +1,4 @@
-const { app, BrowserWindow, ipcMain } = require('electron')
+const { app, BrowserWindow, ipcMain, Notification } = require('electron')
 const path = require('path')
 const fs = require('fs')
 
@@ -12,10 +12,24 @@ function createWindow () {
     alwaysOnTop: false,//置顶
     icon: path.join(__dirname,'./public/icon.svg'),
     ...(process.platform === 'linux' ? { icon } : {}),
-
+    // 窗口是否可调整大小
+    resizable: true,
+    // 窗口是否可移动
+    movable: true,
+    // 窗口是否可关闭
+    closable: true,
+    // 窗口是否可全屏
+    fullscreenable: true,
+    // 窗口是否可最小化
+    minimizable: true,
+    // 窗口是否可最大化
+    maximizable: true,
+    // 窗口是否可恢复
+    restoreable: true,
+    // 窗口是否可透明
+    transparent: false,
     webPreferences: {
-      nodeIntegration: true,
-      contextIsolation: false
+      preload: path.join(__dirname, 'preload.js')
     }
   })
   
@@ -51,26 +65,26 @@ app.on('window-all-closed', () => {
 })
 
 // IPC 监听器 - 处理题目文件操作
-ipcMain.on('read-questions', (event) => {
+ipcMain.handle('read-questions', async (event) => {
   try {
     const isDev = !app.isPackaged
-    const questionsPath = isDev
+    const questionsPath = isDev 
       ? path.join(process.cwd(), 'public/questions.json')
       : path.join(app.getPath('userData'), 'questions.json')
     
     if (fs.existsSync(questionsPath)) {
       const data = JSON.parse(fs.readFileSync(questionsPath, 'utf8'))
-      event.reply('read-questions-response', { success: true, data })
+      return { success: true, data }
     } else {
       // 如果文件不存在，返回空数组
-      event.reply('read-questions-response', { success: true, data: [] })
+      return { success: true, data: [] }
     }
   } catch (error) {
-    event.reply('read-questions-response', { success: false, error: error.message })
+    return { success: false, error: error.message }
   }
 })
 
-ipcMain.on('write-questions', (event, questions) => {
+ipcMain.handle('write-questions', async (event, questions) => {
   try {
     const isDev = !app.isPackaged
     const questionsPath = isDev 
@@ -78,13 +92,13 @@ ipcMain.on('write-questions', (event, questions) => {
       : path.join(app.getPath('userData'), 'questions.json')
     
     fs.writeFileSync(questionsPath, JSON.stringify(questions, null, 2))
-    event.reply('write-questions-response', { success: true })
+    return { success: true }
   } catch (error) {
-    event.reply('write-questions-response', { success: false, error: error.message })
+    return { success: false, error: error.message }
   }
 })
 
-ipcMain.on('delete-question', (event, questionId) => {
+ipcMain.handle('delete-question', async (event, questionId) => {
   try {
     const isDev = !app.isPackaged
     const questionsPath = isDev 
@@ -95,11 +109,26 @@ ipcMain.on('delete-question', (event, questionId) => {
       const data = JSON.parse(fs.readFileSync(questionsPath, 'utf8'))
       const updated = data.filter((q) => q.id !== questionId)
       fs.writeFileSync(questionsPath, JSON.stringify(updated, null, 2))
-      event.reply('delete-question-response', { success: true, data: updated })
+      return { success: true, data: updated }
     } else {
-      event.reply('delete-question-response', { success: true, data: [] })
+      return { success: true, data: [] }
     }
   } catch (error) {
-    event.reply('delete-question-response', { success: false, error: error.message })
+    return { success: false, error: error.message }
   }
 })
+
+
+// 监听名为 'send-notif' 的频道
+ipcMain.on('send-notif', (event, data) => {
+  // data 就是从渲染进程传过来的对象
+  const { title, msg } = data; 
+
+  const notif = new Notification({
+    title: title,
+    body: msg,
+    silent: false
+  });
+
+  notif.show();
+});

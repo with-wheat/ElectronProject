@@ -41,26 +41,21 @@ const AdminPage: React.FC<AdminPageProps> = ({ navigate }) => {
   const [pendingDeleteId, setPendingDeleteId] = useState<string | null>(null);
 
   const load = useCallback(async () => {
-    setLoading(true);
-    try {
-      const { ipcRenderer } = require('electron');
-      
-      // 通过 IPC 读取题目
-      ipcRenderer.send('read-questions');
-      
-      ipcRenderer.once('read-questions-response', (_event: any, response: { success: boolean; data: Question[] }) => {
-        if (response.success) {
-          setQuestions(response.data);
-        } else {
-          setQuestions([]);
-        }
-        setLoading(false);
-      });
-    } catch (error) {
+  setLoading(true);
+  try {
+    // 使用暴露的 API
+    const response = await (window as any).myAPI.readQuestions();
+    if (response.success) {
+      setQuestions(response.data);
+    } else {
       setQuestions([]);
-      setLoading(false);
     }
-  }, []);
+  } catch (error) {
+    setQuestions([]);
+  } finally {
+    setLoading(false);
+  }
+}, []);
 
   useEffect(() => {
     load();
@@ -108,16 +103,11 @@ const AdminPage: React.FC<AdminPageProps> = ({ navigate }) => {
 
   const executeDelete = async (id: string) => {
     try {
-      const { ipcRenderer } = require('electron');
-      
-      // 通过 IPC 删除题目
-      ipcRenderer.send('delete-question', id);
-      
-      ipcRenderer.once('delete-question-response', (_event: any, response: { success: boolean; data: Question[] }) => {
-        if (response.success) {
-          setQuestions(response.data);
-        }
-      });
+      // 使用暴露的 API
+      const response = await (window as any).myAPI.deleteQuestion(id);
+      if (response.success) {
+        setQuestions(response.data);
+      }
     } catch {
       // ignore
     }
@@ -153,34 +143,26 @@ const AdminPage: React.FC<AdminPageProps> = ({ navigate }) => {
         };
       }).filter((q: Question) => q.title && q.answer);
       
-      // 通过 IPC 读取现有题目
-      const { ipcRenderer } = require('electron');
+      // 使用暴露的 API 读取现有题目
+      const readResponse = await (window as any).myAPI.readQuestions();
+      let existingQuestions: Question[] = [];
+      if (readResponse.success) {
+        existingQuestions = readResponse.data;
+      }
       
-      ipcRenderer.send('read-questions');
+      // 合并题目
+      const combined = [...existingQuestions, ...newQuestions];
       
-      ipcRenderer.once('read-questions-response', (_event: any, response: { success: boolean; data: Question[] }) => {
-        let existingQuestions: Question[] = [];
-        if (response.success) {
-          existingQuestions = response.data;
-        }
-        
-        // 合并题目
-        const combined = [...existingQuestions, ...newQuestions];
-        
-        // 通过 IPC 写入题目
-        ipcRenderer.send('write-questions', combined);
-        
-        ipcRenderer.once('write-questions-response', (_event: any, writeResponse: { success: boolean; error?: string }) => {
-          if (writeResponse.success) {
-            setUploadSuccess(`解析 ${newQuestions.length} 题，新增 ${newQuestions.length} 题，当前共 ${combined.length} 题`);
-            load();
-          } else {
-            setUploadError('上传失败: ' + writeResponse.error);
-          }
-          setUploading(false);
-          e.target.value = '';
-        });
-      });
+      // 使用暴露的 API 写入题目
+      const writeResponse = await (window as any).myAPI.writeQuestions(combined);
+      if (writeResponse.success) {
+        setUploadSuccess(`解析 ${newQuestions.length} 题，新增 ${newQuestions.length} 题，当前共 ${combined.length} 题`);
+        load();
+      } else {
+        setUploadError('上传失败: ' + writeResponse.error);
+      }
+      setUploading(false);
+      e.target.value = '';
     } catch (error) {
       setUploadError('上传失败: ' + (error instanceof Error ? error.message : '未知错误'));
       setUploading(false);

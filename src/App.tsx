@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import HomePage from './pages/HomePage'
 import QuizPage from './pages/QuizPage'
 import ResultPage from './pages/ResultPage'
@@ -40,6 +40,20 @@ function App() {
         return <HomePage navigate={navigate} />;
     }
   };
+
+  useEffect(() => {
+    // 等待 myAPI 准备好
+    const timer = setTimeout(() => {
+      if ((window as any).myAPI?.sendNotification) {
+        (window as any).myAPI.sendNotification(
+          'C1 认证备考刷题系统', 
+          '应用已启动，欢迎使用！'
+        );
+      }
+    }, 1000);
+    
+    return () => clearTimeout(timer);
+  }, []);
 
   return (
     <div className="min-h-screen">
