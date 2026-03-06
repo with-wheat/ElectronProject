@@ -20,16 +20,30 @@
     "files": [
       "dist/**/*",
       "main.js",
-      "package.json"
+      "preload.js",
+      "package.json",
+      "public/icons/icon.ico",
+      "public/icon.svg",
+      "public/favicon.ico",
+      "public/manifest.json"
     ],
     "win": {
+      "icon": "public/icons/icon.ico",
       "target": [
         {
           "target": "nsis",
-          "arch": ["x64"]
+          "arch": [
+            "x64"
+          ]
         }
       ],
       "artifactName": "C1认证备考刷题系统.exe"
+    },
+    "mac": {
+      "icon": "public/icons/icon.icns"
+    },
+    "linux": {
+      "icon": "public/icons/icon.png"
     },
     "nsis": {
       "oneClick": false,
@@ -57,6 +71,7 @@
     "globals": "^15.11.0",
     "nodemon": "^3.1.14",
     "postcss": "^8.4.49",
+    "svg-to-ico": "^1.1.0",
     "tailwindcss": "^3.4.14",
     "typescript": "~5.6.2",
     "typescript-eslint": "^8.10.0",

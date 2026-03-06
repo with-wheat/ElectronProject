@@ -2,6 +2,58 @@ const { app, BrowserWindow, ipcMain, Notification } = require('electron')
 const path = require('path')
 const fs = require('fs')
 
+if (process.platform === 'win32') {
+  app.setAppUserModelId('com.c1quiz.app');
+}
+
+// 设置应用名称
+app.name = "C1认证备考刷题系统"
+
+// 初始化默认题目
+function initDefaultQuestions() {
+  try {
+    const isDev = !app.isPackaged
+    const questionsPath = isDev 
+      ? path.join(process.cwd(), 'public/questions.json')
+      : path.join(app.getPath('userData'), 'questions.json')
+    
+    if (!fs.existsSync(questionsPath)) {
+      let defaultQuestions = []
+      
+      // 尝试从 src/assets/data/questions.json 读取默认题目
+      const defaultQuestionsPath = path.join(__dirname, 'src', 'assets', 'data', 'questions.json')
+      
+      if (fs.existsSync(defaultQuestionsPath)) {
+        console.log('从 src/assets/data/questions.json 读取默认题目...')
+        defaultQuestions = JSON.parse(fs.readFileSync(defaultQuestionsPath, 'utf8'))
+      } else {
+        // 如果文件不存在，使用默认题目
+        console.log('src/assets/data/questions.json 不存在，使用内置默认题目...')
+        defaultQuestions = [
+          {
+            id: '1',
+            title: '安全生产管理的根本目的是（ ）。',
+            options: ['A. 消除隐患，杜绝事故', 'B. 避免造成人身伤亡，财产损失', 'C. 提高企业安全生产管理水平', 'D. 保证生产经营活动中的人身安全，财产安全，促进经济发展'],
+            answer: 'D'
+          },
+          {
+            id: '2',
+            title: '安全生产管理的方针是（ ）。',
+            options: ['A. 安全第一，预防为主，综合治理', 'B. 安全第一，预防为主', 'C. 安全第一，综合治理', 'D. 预防为主，综合治理'],
+            answer: 'A'
+          }
+        ]
+      }
+      
+      // 写入默认题目到文件
+      fs.writeFileSync(questionsPath, JSON.stringify(defaultQuestions, null, 2))
+      console.log(`默认题目已初始化，共 ${defaultQuestions.length} 道题`)
+    }
+  } catch (error) {
+    console.error('初始化默认题目失败:', error)
+  }
+}
+
 function createWindow () {
   const win = new BrowserWindow({
     width: 1200,//窗口宽度
@@ -10,7 +62,7 @@ function createWindow () {
     minHeight: 400,//最小高度
     autoHideMenuBar: true,//自动隐藏菜单档
     alwaysOnTop: false,//置顶
-    icon: path.join(__dirname,'./public/icon.svg'),
+    icon: path.join(__dirname, 'public/favicon.ico'),
     ...(process.platform === 'linux' ? { icon } : {}),
     // 窗口是否可调整大小
     resizable: true,
@@ -50,8 +102,10 @@ function createWindow () {
   }
   console.log("main.js 已执行")
 }
-
 app.on('ready', () => {
+  // 初始化默认题目
+  initDefaultQuestions()
+  
   createWindow()
   //兼容核心代码 1
   app.on('activate', () => {
@@ -117,7 +171,6 @@ ipcMain.handle('delete-question', async (event, questionId) => {
     return { success: false, error: error.message }
   }
 })
-
 
 // 监听名为 'send-notif' 的频道
 ipcMain.on('send-notif', (event, data) => {

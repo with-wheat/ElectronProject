@@ -44,11 +44,15 @@ function App() {
   useEffect(() => {
     // 等待 myAPI 准备好
     const timer = setTimeout(() => {
+      console.log('myAPI:', (window as any).myAPI);
       if ((window as any).myAPI?.sendNotification) {
+        console.log('发送通知...');
         (window as any).myAPI.sendNotification(
           'C1 认证备考刷题系统', 
           '应用已启动，欢迎使用！'
         );
+      } else {
+        console.log('myAPI 不存在或 sendNotification 方法不存在');
       }
     }, 1000);
     
