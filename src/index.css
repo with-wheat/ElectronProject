@@ -1,0 +1,125 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --background: hsl(0, 0%, 98%);
+  --foreground: hsl(210, 100%, 10%);
+  --card: hsl(0, 0%, 100%);
+  --card-foreground: hsl(210, 100%, 10%);
+  --popover: hsl(0, 0%, 100%);
+  --popover-foreground: hsl(210, 100%, 10%);
+  --primary: hsl(210, 100%, 50%);
+  --primary-foreground: hsl(0, 0%, 100%);
+  --secondary: hsl(210, 100%, 98%);
+  --secondary-foreground: hsl(210, 100%, 10%);
+  --muted: hsl(0, 0%, 96%);
+  --muted-foreground: hsl(210, 100%, 40%);
+  --accent: hsl(210, 100%, 96%);
+  --accent-foreground: hsl(210, 100%, 10%);
+  --destructive: hsl(0, 100%, 50%);
+  --destructive-foreground: hsl(0, 0%, 100%);
+  --border: hsl(210, 100%, 80%);
+  --input: hsl(210, 100%, 96%);
+  --ring: hsl(210, 100%, 50%);
+  --radius: 0.5rem;
+}
+
+body {
+  font-family: 'Inter', system-ui, sans-serif;
+  background-color: var(--background);
+  color: var(--foreground);
+}
+
+/* 动画效果 */
+@keyframes fade-in {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes slide-up {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes correct-pop {
+  0% {
+    transform: scale(0.8);
+    opacity: 0;
+  }
+  50% {
+    transform: scale(1.1);
+  }
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+@keyframes progressGrow {
+  from {
+    stroke-dashoffset: 339.292;
+  }
+  to {
+    stroke-dashoffset: var(--offset);
+  }
+}
+
+.animate-fade-in {
+  animation: fade-in 0.3s ease-out forwards;
+}
+
+.animate-slide-up {
+  animation: slide-up 0.3s ease-out forwards;
+}
+
+.animate-correct-pop {
+  animation: correct-pop 0.3s ease-out forwards;
+}
+
+.quiz-nav-scroll {
+  scrollbar-width: thin;
+  scrollbar-color: var(--border) var(--muted);
+}
+
+.quiz-nav-scroll::-webkit-scrollbar {
+  width: 6px;
+}
+
+.quiz-nav-scroll::-webkit-scrollbar-track {
+  background: var(--muted);
+  border-radius: 3px;
+}
+
+.quiz-nav-scroll::-webkit-scrollbar-thumb {
+  background: var(--border);
+  border-radius: 3px;
+}
+
+.quiz-nav-scroll::-webkit-scrollbar-thumb:hover {
+  background: var(--muted-foreground);
+}
+
+/* 响应式调整 */
+@media (max-width: 640px) {
+  .h-dvh {
+    height: 100vh;
+  }
+}
+
+/* 过渡效果 */
+.transition-smooth {
+  transition: all 0.2s ease-in-out;
+}
