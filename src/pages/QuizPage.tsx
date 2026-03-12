@@ -146,6 +146,7 @@ const QuizPage: React.FC<QuizPageProps> = ({ navigate }) => {
   const [answered, setAnswered] = useState<
     Record<string, { selected: string[]; correct: boolean }>
   >({});
+  const answeredRef = useRef(answered);
   const [showNav, setShowNav] = useState(false);
   const [correctFlash, setCorrectFlash] = useState(false);
   const autoAdvanceTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -199,6 +200,11 @@ const QuizPage: React.FC<QuizPageProps> = ({ navigate }) => {
     loadQuestions();
   }, [loadQuestions]);
 
+  // Keep a synchronous reference for navigation calculations
+  useEffect(() => {
+    answeredRef.current = answered;
+  }, [answered]);
+
   // Cleanup timer
   useEffect(() => {
     return () => {
@@ -240,11 +246,12 @@ const QuizPage: React.FC<QuizPageProps> = ({ navigate }) => {
   };
 
   const advanceToNext = useCallback(() => {
+    const latestAnswered = answeredRef.current;
     if (isLast) {
       const wrongIds = list
-        .filter((q) => answered[q.id] && !answered[q.id].correct)
+        .filter((q) => latestAnswered[q.id] && !latestAnswered[q.id].correct)
         .map((q) => q.id);
-      const correctTotal = list.filter((q) => answered[q.id]?.correct).length;
+      const correctTotal = list.filter((q) => latestAnswered[q.id]?.correct).length;
       navigate(
         '/result',
         { total: list.length.toString(), correct: correctTotal.toString(), wrong: wrongIds.join(',') }
@@ -254,7 +261,7 @@ const QuizPage: React.FC<QuizPageProps> = ({ navigate }) => {
     setCorrectFlash(false);
     setIndex((i) => i + 1);
     setSelected([]);
-  }, [isLast, list, answered, navigate]);
+  }, [isLast, list, navigate]);
 
   const handleSelect = (optionLabel: string) => {
     if (!current || hasAnswered) return;
